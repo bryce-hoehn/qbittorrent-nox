@@ -1,5 +1,5 @@
 {
-  description = "<% name.capitalize() %> distroless image";
+  description = "qbittorrent-nox distroless image";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -10,22 +10,26 @@
     pkgs = nixpkgs.legacyPackages.${system};
   in {
     packages.${system} = {
-      <% name %>-image = pkgs.dockerTools.buildLayeredImage {
-        name = "<% name %>";
+      qbittorrent-nox-image = pkgs.dockerTools.buildLayeredImage {
+        name = "qbittorrent-nox";
         tag = "latest";
         contents = [ 
-          pkgs.<% name %>
+          pkgs.qbittorrent-nox
         ];
         config = {
           ExposedPorts = {
-            "1234/tcp" = {};
+            "8080/tcp" = {};
+            "6881/tcp" = {};
+            "6881/udp" = {};
           };
           Volumes = {
             "/config" = {};
             "/data" = {};
           };
-
-          Cmd = [ "${pkgs.<% name %>}/bin/<% name %>" ];
+          Env = [
+            "QBT_WEBUI_PORT=8080"
+          ];
+          Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
           # Distroless non‑root user
           User = "1000";
           WorkingDir = "/config";
@@ -33,9 +37,9 @@
       };
     };
 
-    # Expose the <% name %> version for CI workflows
-    <% name %>Version = pkgs.<% name %>.version;
+    # Expose the qbittorrent-nox version for CI workflows
+    qbittorrent-noxVersion = pkgs.qbittorrent-nox.version;
 
-    defaultPackage.${system} = self.packages.${system}.<% name %>-image;
+    defaultPackage.${system} = self.packages.${system}.qbittorrent-nox-image;
   };
 }
