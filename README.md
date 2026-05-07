@@ -1,3 +1,3 @@
-# <% name %>
+# qbittorrent-nox
 
-<% description %>
+Featureful free software BitTorrent client
