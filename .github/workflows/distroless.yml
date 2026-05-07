@@ -2,9 +2,8 @@ name: Update Distroless Base Image
 
 on:
   schedule:
-    # Run weekly on Monday at 09:00 UTC
-    - cron: '0 9 * * 1'
-  workflow_dispatch:  # Allow manual trigger
+    - cron: '0 9 * * 1'   # weekly on Monday at 09:00 UTC
+  workflow_dispatch:       # manual trigger
 
 jobs:
   update-base:
@@ -12,16 +11,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          # Ensure we can push back later
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install dependencies
+      # Install Nix (with flakes enabled)
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Install skopeo and jq
         run: |
           sudo apt-get update
           sudo apt-get install -y skopeo jq
-          # Install nix-prefetch-docker (from nixpkgs)
-          nix-env -iA nixpkgs.nix-prefetch-docker
 
       - name: Get current digest of distroless/static-debian12:latest
         id: digest
@@ -32,19 +34,25 @@ jobs:
       - name: Prefetch image to get Nix sha256
         id: prefetch
         run: |
-          # nix-prefetch-docker outputs JSON with the sha256 for the digest
-          PREFETCH_JSON=$(nix-prefetch-docker --image gcr.io/distroless/static-debian12 --image-digest ${{ steps.digest.outputs.digest }})
+          # Use nix run to execute nix-prefetch-docker from nixpkgs
+          PREFETCH_JSON=$(nix run nixpkgs#nix-prefetch-docker -- \
+            --image gcr.io/distroless/static-debian12 \
+            --image-digest ${{ steps.digest.outputs.digest }})
           SHA256=$(echo "$PREFETCH_JSON" | jq -r '.sha256')
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
 
+      - name: Verify we got a non-empty sha256
+        if: steps.prefetch.outputs.sha256 == ''
+        run: |
+          echo "Error: Failed to get sha256 from prefetch"
+          exit 1
+
       - name: Update flake.nix
         run: |
-          # Replace the existing imageDigest line
+          # Replace the imageDigest line
           sed -i "s|imageDigest = \"sha256:.*\";|imageDigest = \"${{ steps.digest.outputs.digest }}\";|" flake.nix
-          # Replace the sha256 line (the value inside the string)
+          # Replace the sha256 line (the quoted string that starts with 'sha256-')
           sed -i "s|sha256 = \"sha256-.*\";|sha256 = \"${{ steps.prefetch.outputs.sha256 }}\";|" flake.nix
-          # Optional: also update finalImageTag if you want to mark the tag
-          sed -i "s|finalImageTag = \".*\";|finalImageTag = \"latest\";|" flake.nix
 
       - name: Check for changes
         id: changes
@@ -55,11 +63,16 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit and push updates
+      - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add flake.nix
-          git commit -m "chore: update distroless base image digest to ${{ steps.digest.outputs.digest }}"
-          git push
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update distroless base image digest to ${{ steps.digest.outputs.digest }}"
+          title: "Update distroless base image"
+          body: |
+            Automated update of the base image digest and Nix hash.
+            - Image: `gcr.io/distroless/static-debian12`
+            - New digest: `${{ steps.digest.outputs.digest }}`
+          branch: "update-distroless-base"
+          delete-branch: true
