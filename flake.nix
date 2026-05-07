@@ -18,8 +18,7 @@
         ];
 
         extraCommands = ''
-          groupadd -r qbittorrent -g 1000 && \
-          useradd -r -g qbittorrent -u 1000 qbittorrent && \
+          useradd -m qbittorrent -u 1000 -g 1000 && \
           mkdir -p /home/qbittorrent/.config && \
           ln -s ~/.config /config
         '';
