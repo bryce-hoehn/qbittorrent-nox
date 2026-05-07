@@ -19,7 +19,7 @@
         fromImage = pkgs.dockerTools.pullImage {
           imageName = "gcr.io/distroless/static-debian12";
           # imageDigest = "sha256:c6d5981545ce1406d33c8a1a3e8c8a3c71f5255b3cdc5c7b3d8a4c8b9a6e8f9d";
-          # sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
         };
         extraCommands = ''
           #!${pkgs.runtimeShell}
