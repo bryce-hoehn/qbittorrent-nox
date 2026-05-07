@@ -18,7 +18,10 @@
         ];
 
         extraCommands = ''
-          ln -s ~/.config/qBittorrent /config
+          groupadd -r qbittorrent -g 1000 && \
+          useradd -r -g qbittorrent -u 1000 qbittorrent && \
+          mkdir -p /home/qbittorrent/.config && \
+          ln -s ~/.config /config
         '';
 
         config = {
@@ -36,7 +39,7 @@
           ];
           Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
           # Distroless non‑root user
-          User = "1000";
+          User = "qbittorrent";
           WorkingDir = "/config";
         };
       };
