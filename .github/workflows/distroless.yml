@@ -1,0 +1,65 @@
+name: Update Distroless Base Image
+
+on:
+  schedule:
+    # Run weekly on Monday at 09:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update-base:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Ensure we can push back later
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y skopeo jq
+          # Install nix-prefetch-docker (from nixpkgs)
+          nix-env -iA nixpkgs.nix-prefetch-docker
+
+      - name: Get current digest of distroless/static-debian12:latest
+        id: digest
+        run: |
+          DIGEST=$(skopeo inspect docker://gcr.io/distroless/static-debian12:latest | jq -r '.Digest')
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
+      - name: Prefetch image to get Nix sha256
+        id: prefetch
+        run: |
+          # nix-prefetch-docker outputs JSON with the sha256 for the digest
+          PREFETCH_JSON=$(nix-prefetch-docker --image gcr.io/distroless/static-debian12 --image-digest ${{ steps.digest.outputs.digest }})
+          SHA256=$(echo "$PREFETCH_JSON" | jq -r '.sha256')
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+
+      - name: Update flake.nix
+        run: |
+          # Replace the existing imageDigest line
+          sed -i "s|imageDigest = \"sha256:.*\";|imageDigest = \"${{ steps.digest.outputs.digest }}\";|" flake.nix
+          # Replace the sha256 line (the value inside the string)
+          sed -i "s|sha256 = \"sha256-.*\";|sha256 = \"${{ steps.prefetch.outputs.sha256 }}\";|" flake.nix
+          # Optional: also update finalImageTag if you want to mark the tag
+          sed -i "s|finalImageTag = \".*\";|finalImageTag = \"latest\";|" flake.nix
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet flake.nix; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push updates
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add flake.nix
+          git commit -m "chore: update distroless base image digest to ${{ steps.digest.outputs.digest }}"
+          git push
