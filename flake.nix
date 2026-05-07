@@ -17,7 +17,7 @@
           pkgs.qbittorrent-nox
         ];
 
-        extraCommands = ''
+        runAsRoot = ''
           #!${pkgs.runtimeShell}
           # Create user/group entries manually
           echo "root:x:0:0:root:/root:/bin/sh" > /etc/passwd
