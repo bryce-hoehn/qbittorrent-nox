@@ -10,7 +10,7 @@
     pkgs = nixpkgs.legacyPackages.${system};
   in {
     packages.${system} = {
-      qbittorrent-nox-image = pkgs.dockerTools.buildLayeredImage {
+      qbittorrent-nox-image = pkgs.dockerTools.buildImage {
         name = "qbittorrent-nox";
         tag = "latest";
         contents = [ 
