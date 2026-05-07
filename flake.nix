@@ -10,14 +10,18 @@
     pkgs = nixpkgs.legacyPackages.${system};
   in {
     packages.${system} = {
-      qbittorrent-nox-image = pkgs.dockerTools.buildImage {
+      qbittorrent-nox-image = pkgs.dockerTools.buildLayeredImage {
         name = "qbittorrent-nox";
         tag = "latest";
         contents = [ 
           pkgs.qbittorrent-nox
         ];
-
-        runAsRoot = ''
+        fromImage = pkgs.dockerTools.pullImage {
+          imageName = "gcr.io/distroless/static-debian12";
+          imageDigest = "sha256:c6d5981545ce1406d33c8a1a3e8c8a3c71f5255b3cdc5c7b3d8a4c8b9a6e8f9d";
+          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+        };
+        extraCommands = ''
           #!${pkgs.runtimeShell}
           # Create user/group entries manually
           echo "root:x:0:0:root:/root:/bin/sh" > /etc/passwd
