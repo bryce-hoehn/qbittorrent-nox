@@ -16,6 +16,11 @@
         contents = [ 
           pkgs.qbittorrent-nox
         ];
+        extraCommands {
+          ''
+            ln -s ~/.config/qBittorrent /config
+          ''
+        }
         config = {
           ExposedPorts = {
             "8080/tcp" = {};
