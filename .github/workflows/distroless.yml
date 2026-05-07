@@ -30,14 +30,16 @@ jobs:
         run: |
           DIGEST=$(skopeo inspect docker://gcr.io/distroless/static-debian12:latest | jq -r '.Digest')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
-
+    
       - name: Prefetch image to get Nix sha256
         id: prefetch
         run: |
-          # Use nix run to execute nix-prefetch-docker from nixpkgs
+          DIGEST="${{ steps.digest.outputs.digest }}"
+          echo "Using digest: $DIGEST"
+          # Run nix-prefetch-docker with positional image and explicit digest
           PREFETCH_JSON=$(nix run nixpkgs#nix-prefetch-docker -- \
-            --image gcr.io/distroless/static-debian12 \
-            --image-digest ${{ steps.digest.outputs.digest }})
+            gcr.io/distroless/static-debian12 \
+            --image-digest "$DIGEST")
           SHA256=$(echo "$PREFETCH_JSON" | jq -r '.sha256')
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
 
