@@ -1,4 +1,4 @@
-name: Build qbittorrent-nox Distroless
+name: Build & Publish
 
 permissions:
   contents: read
