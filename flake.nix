@@ -18,40 +18,42 @@
       };
     };
   in {
-    qbittorrent-nox-image = pkgs.dockerTools.buildLayeredImage {
-      name = "qbittorrent-nox";
-      tag = "latest";
-      fromImage = pkgs.dockerTools.pullImage {
-        inherit (distrolessImage) imageName imageDigest;
-        sha256 = distrolessImage.sha256.${system};
-      };
-      contents = [
-        pkgs.qbittorrent-nox
-      ];
-      fakeRootCommands = ''
-        mkdir -p ./config ./data
-        chown -R 1000:1000 /config /data
-      '';
-      config = {
-        ExposedPorts = {
-          "8080/tcp" = {};
-          "6881/tcp" = {};
-          "6881/udp" = {};
+    packages.${system} = {
+      qbittorrent-nox-image = pkgs.dockerTools.buildLayeredImage {
+        name = "qbittorrent-nox";
+        tag = "latest";
+        fromImage = pkgs.dockerTools.pullImage {
+          inherit (distrolessImage) imageName imageDigest;
+          sha256 = distrolessImage.sha256.${system};
         };
-        Volumes = {
-          "/config" = {};
-          "/data" = {};
-        };
-        Env = [
-          "QBT_WEBUI_PORT=8080"
-          "QBT_PROFILE=/config"
+        contents = [
+          pkgs.qbittorrent-nox
         ];
-        Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
-        User = "1000";
-        WorkingDir = "/config";
+        fakeRootCommands = ''
+          mkdir -p ./config ./data
+          chown -R 1000:1000 /config /data
+        '';
+        config = {
+          ExposedPorts = {
+            "8080/tcp" = {};
+            "6881/tcp" = {};
+            "6881/udp" = {};
+          };
+          Volumes = {
+            "/config" = {};
+            "/data" = {};
+          };
+          Env = [
+            "QBT_WEBUI_PORT=8080"
+            "QBT_PROFILE=/config"
+          ];
+          Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
+          User = "1000";
+          WorkingDir = "/config";
+        };
       };
     };
-
+    
     qbittorrent-noxVersion = pkgs.qbittorrent-nox.version;
 
     defaultPackage.${system} = self.packages.${system}.qbittorrent-nox-image;
