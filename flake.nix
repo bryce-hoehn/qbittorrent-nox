@@ -19,7 +19,7 @@
         fromImage = pkgs.dockerTools.pullImage {
           imageName = "gcr.io/distroless/static-debian12";
           imageDigest = "sha256:20bc6c0bc4d625a22a8fde3e55f6515709b32055ef8fb9cfbddaa06d1760f838";
-          sha256 = "sha256-nTtTRnFVT//TiopktoapC/GncNlI5I6jhf7CsHpCpFY=";
+          sha256 = "sha256-RMKwrKl6lMjNO5G4W5B1I9y10ToOMOS++G4E9/gvfSQ=";
         };
         config = {
           ExposedPorts = {
