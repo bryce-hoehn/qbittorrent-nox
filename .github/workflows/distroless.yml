@@ -34,46 +34,37 @@ jobs:
           DIGEST=$(skopeo inspect docker://gcr.io/distroless/static-debian12:latest | jq -r '.Digest')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           echo "Digest: $DIGEST"
-
+      
       - name: Prefetch image to get Nix sha256
         id: prefetch
         run: |
           DIGEST="${{ steps.digest.outputs.digest }}"
-          # Use nix run to execute nix-prefetch-docker from nixpkgs
           PREFETCH_JSON=$(nix run nixpkgs#nix-prefetch-docker -- \
             gcr.io/distroless/static-debian12 \
             --image-digest "$DIGEST" \
             --json)
           SHA256=$(echo "$PREFETCH_JSON" | jq -r '.sha256')
+          if [[ -z "$SHA256" || "$SHA256" == "null" ]]; then
+            echo "Error: Invalid sha256: $SHA256"
+            exit 1
+          fi
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
-          echo "Nix sha256: $SHA256"
-
-      - name: Verify hash
-        if: steps.prefetch.outputs.sha256 == ''
-        run: |
-          echo "Error: Failed to retrieve sha256 hash"
-          exit 1
-
+      
       - name: Update flake.nix
         run: |
-          # Update imageDigest line (expects "imageDigest = \"sha256:...\";")
-          sed -i "s|imageDigest = \"sha256:.*\";|imageDigest = \"${{ steps.digest.outputs.digest }}\";|" flake.nix
-          
-          # Update sha256 line (this works regardless of current value, e.g. "null" or "sha256-...")
-          sed -i 's|sha256 = ".*";|sha256 = "${{ steps.prefetch.outputs.sha256 }}";|' flake.nix
-          
-          # Show what changed (for debugging)
-          git diff flake.nix || true
-
-      - name: Check for changes
-        id: changes
-        run: |
-          if git diff --quiet flake.nix; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No changes detected"
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
+          # Use a single-quoted sed pattern to avoid variable interpolation by shell,
+          # but we need to embed the variable. Safer to use double quotes and escape.
+          sed -i "s|sha256 = \".*\";|sha256 = \"${{ steps.prefetch.outputs.sha256 }}\";|" flake.nix
+      
+            - name: Check for changes
+              id: changes
+              run: |
+                if git diff --quiet flake.nix; then
+                  echo "changed=false" >> $GITHUB_OUTPUT
+                  echo "No changes detected"
+                else
+                  echo "changed=true" >> $GITHUB_OUTPUT
+                fi
 
       - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'
