@@ -1,12 +1,12 @@
 services:
-  <% name %>:
-    image: ghcr.io/podmania/<% name %>:latest
-    # set to host user id and gid
-    # defaults to 1000:1000
-    # user: 1001:1001
-    container_name: <% name %>
+  qbittorrent-nox:
+    image: ghcr.io/podmania/qbittorrent-nox:latest
+    userns_mode: "keep-id"
+    container_name: qbittorrent-nox
     ports:
-      - 1234:1234
+      - 8080:8080
+      - 6881:6881/tcp
+      - 6881:6881/udp
     volumes:   
       - ./config:/config
       - ./data:/data
