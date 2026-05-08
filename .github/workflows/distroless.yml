@@ -1,8 +1,7 @@
 name: Update Distroless Base Image
 
 permissions:
-  contents: write
-  packages: write
+  pull-requests: write
   
 on:
   schedule:
