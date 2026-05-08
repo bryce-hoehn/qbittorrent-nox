@@ -16,6 +16,7 @@
         x86_64-linux = "sha256-q1ez8v8w0ZTscHsl9TJLYfP+Zq6VXwtbarNP0HC7S4c=";
         aarch64-linux = "sha256-cNH7zwR3+39WxI5pp9nFeJiO4wKMcGz0cjkl0bnGKgM=";
       };
+      unsafeDiscardReferences = true;
     };
   in {
     packages.${system} = {
