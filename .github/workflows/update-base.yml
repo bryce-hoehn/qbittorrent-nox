@@ -12,8 +12,6 @@ jobs:
       IMAGE_NAME: ghcr.io/podmania/base
     permissions:
       contents: write 
-      packages: write
-      actions: write 
 
     steps:
       - uses: actions/checkout@v6
@@ -79,10 +77,3 @@ jobs:
           git add flake.nix
           git commit -m "chore: update base image"
           git push
-
-      - name: Trigger qBittorrent build workflow
-        if: success()
-        run: |
-          gh workflow run build-publish.yml --ref main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
