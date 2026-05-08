@@ -2,19 +2,18 @@ name: Update Distroless Base Image
 
 on:
   schedule:
-    - cron: '0 9 * * 1'
-  workflow_dispatch:
+    - cron: '0 9 * * 1'   # weekly on Monday
+  workflow_dispatch:       # manual trigger
 
 jobs:
-  update-base:
+  update:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
@@ -24,71 +23,37 @@ jobs:
             experimental-features = nix-command flakes
 
       - name: Install skopeo and jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y skopeo jq
+        run: sudo apt-get update && sudo apt-get install -y skopeo jq
 
       - name: Get current digest
         id: digest
         run: |
           DIGEST=$(skopeo inspect docker://gcr.io/distroless/static-debian12:latest | jq -r '.Digest')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
-          echo "Digest: $DIGEST"
-      
-      - name: Prefetch image to get Nix sha256
+
+      - name: Prefetch image hash
         id: prefetch
         run: |
           DIGEST="${{ steps.digest.outputs.digest }}"
-          # Capture both stdout and stderr; set +e to avoid script exit on failure
-          set +e
-          RAW=$(nix run nixpkgs#nix-prefetch-docker -- --json gcr.io/distroless/static-debian12 --image-digest "$DIGEST" 2>&1)
-          set -e
-          # Try to extract sha256 from JSON
-          SHA256=$(echo "$RAW" | jq -r '.sha256' 2>/dev/null)
-          if [[ -z "$SHA256" || "$SHA256" == "null" ]]; then
-            # Fallback: parse the human-readable output (e.g. "-> ImageHash: sha256-...")
-            SHA256=$(echo "$RAW" | grep -oP '(?<=-> ImageHash: )[a-zA-Z0-9\-=]+')
-          fi
-          if [[ -z "$SHA256" || "$SHA256" == "null" ]]; then
-            echo "Error: Could not extract sha256 from prefetch output"
-            echo "Raw output was:"
-            echo "$RAW"
-            exit 1
-          fi
+          # Run nix-prefetch-docker (without --json) – it prints JSON as the last line
+          OUTPUT=$(nix run nixpkgs#nix-prefetch-docker -- \
+            gcr.io/distroless/static-debian12 \
+            --image-digest "$DIGEST" 2>&1)
+          # Extract the last line (JSON) and get the .hash field
+          SHA256=$(echo "$OUTPUT" | tail -n1 | jq -r '.hash')
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
-          echo "Extracted sha256: $SHA256"
-    
+
       - name: Update flake.nix
         run: |
-          # Use a single-quoted sed pattern to avoid variable interpolation by shell,
-          # but we need to embed the variable. Safer to use double quotes and escape.
-          sed -i "s|sha256 = \".*\";|sha256 = \"${{ steps.prefetch.outputs.sha256 }}\";|" flake.nix
-      
-            - name: Check for changes
-              id: changes
-              run: |
-                if git diff --quiet flake.nix; then
-                  echo "changed=false" >> $GITHUB_OUTPUT
-                  echo "No changes detected"
-                else
-                  echo "changed=true" >> $GITHUB_OUTPUT
-                fi
+          sed -i "s|imageDigest = \"sha256:.*\";|imageDigest = \"${{ steps.digest.outputs.digest }}\";|" flake.nix
+          sed -i 's|sha256 = ".*";|sha256 = "${{ steps.prefetch.outputs.sha256 }}";|' flake.nix
 
       - name: Create Pull Request
-        if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update distroless base image digest to ${{ steps.digest.outputs.digest }}"
-          title: "Update distroless base image"
-          body: |
-            This PR updates the Distroless base image to the latest available digest.
-            
-            - Image: `gcr.io/distroless/static-debian12`
-            - New digest: `${{ steps.digest.outputs.digest }}`
-            - Nix hash: `${{ steps.prefetch.outputs.sha256 }}`
-            
-            Automated by GitHub Actions.
+          commit-message: "chore: update distroless base image"
+          title: "Update Distroless base image"
+          body: "Updates to latest digest and hash."
           branch: "update-distroless-base"
           delete-branch: true
-          labels: dependencies
