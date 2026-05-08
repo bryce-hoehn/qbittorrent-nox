@@ -22,12 +22,6 @@
           sha256 = "sha256-nTtTRnFVT//TiopktoapC/GncNlI5I6jhf7CsHpCpFY=";
         };
         extraCommands = ''
-          #!${pkgs.runtimeShell}
-          # Create user/group entries manually
-          echo "root:x:0:0:root:/root:/bin/sh" > /etc/passwd
-          echo "qbittorrent:x:1000:1000:qbittorrent User:/config:/bin/sh" >> /etc/passwd
-          echo "root:x:0:" > /etc/group
-          echo "qbittorrent:x:1000:" >> /etc/group
           mkdir -p /home/qbittorrent/.config
           ln -s ~/.config /config
         '';
