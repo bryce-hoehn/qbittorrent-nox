@@ -37,10 +37,10 @@ jobs:
           DIGEST="${{ steps.digest.outputs.digest }}"
           OUTPUT=$(nix run nixpkgs#nix-prefetch-docker -- \
             gcr.io/distroless/static-debian12 \
-            --image-digest "$DIGEST" 2>&1)
+            --image-digest "$DIGEST" \
+            --json)
 
-          JSON=$(echo "$OUTPUT" | sed -n '/^{/,$p' | head -n -1)
-          SHA256=$(echo "$JSON" | jq -r '.hash')
+          SHA256=$(echo "$OUTPUT" | jq -r '.hash')
           if [[ -z "$SHA256" || "$SHA256" == "null" ]]; then
             echo "Failed to extract hash"
             echo "Full output: $OUTPUT"
