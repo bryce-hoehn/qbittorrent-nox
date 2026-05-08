@@ -1,6 +1,7 @@
 name: Update Distroless Base Image
 
 permissions:
+  contents: write
   pull-requests: write
   
 on:
