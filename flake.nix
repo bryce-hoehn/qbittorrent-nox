@@ -1,13 +1,15 @@
 {
-  description = "qbittorrent-nox distroless image";
+  description = "qbittorrent-nox distroless image using nix2container";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nix2container.url = "github:nlewo/nix2container";
   };
 
-  outputs = { self, nixpkgs }: let
+  outputs = { self, nixpkgs, nix2container }: let
     system = builtins.currentSystem;
     pkgs = nixpkgs.legacyPackages.${system};
+    n2c = nix2container.outputs.packages.${system}.nix2container;
 
     distrolessImage = {
       imageName = "ghcr.io/podmania/base";
@@ -19,18 +21,20 @@
     };
   in {
     packages.${system} = {
-      qbittorrent-nox-image = pkgs.dockerTools.buildLayeredImage {
+      qbittorrent-nox-image = n2c.buildImage {
         name = "qbittorrent-nox";
         tag = "latest";
-        fromImage = pkgs.lib.overrideDerivation (pkgs.dockerTools.pullImage {
-          inherit (distrolessImage) imageName imageDigest;
+
+        fromImage = n2c.pullImage {
+          imageName = distrolessImage.imageName;
+          imageDigest = distrolessImage.imageDigest;
           sha256 = distrolessImage.sha256.${system};
-        }) (old: {
-          unsafeDiscardReferences = true;
-        });
+        };
+
         contents = [
           pkgs.qbittorrent-nox
         ];
+
         config = {
           ExposedPorts = {
             "8080/tcp" = {};
@@ -49,10 +53,10 @@
           WorkingDir = "/config";
         };
       };
+
+      default = self.packages.${system}.qbittorrent-nox-image;
     };
     
     qbittorrent-noxVersion = pkgs.qbittorrent-nox.version;
-
-    defaultPackage.${system} = self.packages.${system}.qbittorrent-nox-image;
   };
 }
