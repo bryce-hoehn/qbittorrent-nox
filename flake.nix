@@ -11,10 +11,10 @@
 
     distrolessImage = {
       imageName = "gcr.io/distroless/static-debian12";
-      imageDigest = "sha256:20bc6c0bc4d625a22a8fde3e55f6515709b32055ef8fb9cfbddaa06d1760f838";
+      imageDigest = "sha256:bf251a2cdaebb929ad7803671a3e5d48a0d9d4bcff43c2199d268e04ca8401bc";
       sha256 = {
-        x86_64-linux = "sha256-nTtTRnFVT//TiopktoapC/GncNlI5I6jhf7CsHpCpFY=";
-        aarch64-linux = "sha256-RMKwrKl6lMjNO5G4W5B1I9y10ToOMOS++G4E9/gvfSQ=";
+        x86_64-linux = "sha256-q1ez8v8w0ZTscHsl9TJLYfP+Zq6VXwtbarNP0HC7S4c=";
+        aarch64-linux = "sha256-cNH7zwR3+39WxI5pp9nFeJiO4wKMcGz0cjkl0bnGKgM=";
       };
     };
   in {
