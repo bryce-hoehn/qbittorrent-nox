@@ -22,7 +22,7 @@
       qbittorrent-nox-image = pkgs.dockerTools.buildLayeredImage {
         name = "qbittorrent-nox";
         tag = "latest";
-        fromImage = pkgs.dockerTools.pullImage {
+        fromImage = pkgs.lib.overrideDerivation (pkgs.dockerTools.pullImage {
           inherit (distrolessImage) imageName imageDigest;
           sha256 = distrolessImage.sha256.${system};
         }) (old: {
