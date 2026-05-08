@@ -22,16 +22,18 @@
       qbittorrent-nox-image = pkgs.dockerTools.buildLayeredImage {
         name = "qbittorrent-nox";
         tag = "latest";
-        contents = [
-          pkgs.qbittorrent-nox
-          pkgs.fakeNss
-        ];
         fromImage = pkgs.dockerTools.pullImage {
           inherit (distrolessImage) imageName imageDigest;
           sha256 = distrolessImage.sha256.${system};
         };
+        contents = [
+          pkgs.qbittorrent-nox
+          pkgs.fakeNss
+          (pkgs.runCommand "qbittorrent-dirs" {} ''
+            mkdir -p $out/config $out/data
+          '')
+        ];
         fakeRootCommands = ''
-          mkdir -p /config /data
           echo "qbittorrent:x:1000:1000::/config:/bin/sh" >> /etc/passwd
           echo "qbittorrent:x:1000:" >> /etc/group
           chown -R 1000:1000 /config /data
