@@ -35,18 +35,23 @@ jobs:
         id: prefetch
         run: |
           DIGEST="${{ steps.digest.outputs.digest }}"
-          # Run nix-prefetch-docker (without --json) – it prints JSON as the last line
           OUTPUT=$(nix run nixpkgs#nix-prefetch-docker -- \
             gcr.io/distroless/static-debian12 \
             --image-digest "$DIGEST" 2>&1)
-          # Extract the last line (JSON) and get the .hash field
-          SHA256=$(echo "$OUTPUT" | tail -n1 | jq -r '.hash')
+          
+          # Extract the JSON object: everything from the first '{' to the last '}'
+          JSON=$(echo "$OUTPUT" | sed -n '/^{/,$p' | jq -c '.')
+          SHA256=$(echo "$JSON" | jq -r '.hash')
+          if [[ -z "$SHA256" || "$SHA256" == "null" ]]; then
+            echo "Failed to extract hash"
+            echo "JSON extracted: $JSON"
+            exit 1
+          fi
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
-
-      - name: Update flake.nix
-        run: |
-          sed -i "s|imageDigest = \"sha256:.*\";|imageDigest = \"${{ steps.digest.outputs.digest }}\";|" flake.nix
-          sed -i 's|sha256 = ".*";|sha256 = "${{ steps.prefetch.outputs.sha256 }}";|' flake.nix
+            - name: Update flake.nix
+              run: |
+                sed -i "s|imageDigest = \"sha256:.*\";|imageDigest = \"${{ steps.digest.outputs.digest }}\";|" flake.nix
+                sed -i 's|sha256 = ".*";|sha256 = "${{ steps.prefetch.outputs.sha256 }}";|' flake.nix
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
