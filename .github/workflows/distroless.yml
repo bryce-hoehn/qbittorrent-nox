@@ -1,4 +1,4 @@
-name: Update Distroless Base Image
+name: Update Base Image
 
 on:
   schedule:
@@ -8,12 +8,14 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ghcr.io/podmania/base
     permissions:
       contents: write
-      pull-requests: write
+      packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
@@ -28,7 +30,7 @@ jobs:
       - name: Get current digest
         id: digest
         run: |
-          DIGEST=$(skopeo inspect docker://gcr.io/distroless/static-debian12:latest | jq -r '.Digest')
+          DIGEST=$(skopeo inspect docker://{{ IMAGE_NAME }}:latest | jq -r '.Digest')
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Prefetch image hashes
@@ -37,7 +39,7 @@ jobs:
           DIGEST="${{ steps.digest.outputs.digest }}"
 
           AMD64_OUTPUT=$(nix run nixpkgs#nix-prefetch-docker -- \
-            --image-name gcr.io/distroless/static-debian12 \
+            --image-name {{ IMAGE_NAME }} \
             --image-digest "$DIGEST" \
             --arch amd64 \
             --json)
@@ -50,7 +52,7 @@ jobs:
           echo "sha256_amd64=$SHA256_AMD64" >> $GITHUB_OUTPUT
 
           ARM64_OUTPUT=$(nix run nixpkgs#nix-prefetch-docker -- \
-            --image-name gcr.io/distroless/static-debian12 \
+            --image-name {{ IMAGE_NAME }} \
             --image-digest "$DIGEST" \
             --arch arm64 \
             --json)
@@ -68,12 +70,10 @@ jobs:
           sed -i "s|x86_64-linux = \".*\";|x86_64-linux = \"${{ steps.prefetch.outputs.sha256_amd64 }}\";|" flake.nix
           sed -i "s|aarch64-linux = \".*\";|aarch64-linux = \"${{ steps.prefetch.outputs.sha256_arm64 }}\";|" flake.nix
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update distroless base image"
-          title: "Update Distroless base image"
-          body: "Updates to latest digest and hash."
-          branch: "update-distroless-base"
-          delete-branch: true
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: update base image"
+          git push
