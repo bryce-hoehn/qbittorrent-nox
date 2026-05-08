@@ -21,11 +21,6 @@
           imageDigest = "sha256:20bc6c0bc4d625a22a8fde3e55f6515709b32055ef8fb9cfbddaa06d1760f838";
           sha256 = "sha256-nTtTRnFVT//TiopktoapC/GncNlI5I6jhf7CsHpCpFY=";
         };
-        extraCommands = ''
-          mkdir -p /home/qbittorrent/.config
-          ln -s ~/.config /config
-        '';
-
         config = {
           ExposedPorts = {
             "8080/tcp" = {};
