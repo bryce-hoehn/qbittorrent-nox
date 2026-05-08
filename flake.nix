@@ -25,7 +25,7 @@
         fromImage = pkgs.dockerTools.pullImage {
           inherit (distrolessImage) imageName imageDigest;
           sha256 = distrolessImage.sha256.${system};
-          # unsafeDiscardReferences = true;
+          discardReferences = true;
         };
         contents = [
           pkgs.qbittorrent-nox
