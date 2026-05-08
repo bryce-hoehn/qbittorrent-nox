@@ -13,10 +13,10 @@
 
     distrolessImage = {
       imageName = "ghcr.io/podmania/base";
-      imageDigest = "sha256:bf251a2cdaebb929ad7803671a3e5d48a0d9d4bcff43c2199d268e04ca8401bc";
+      imageDigest = "sha256:488c95da5023d19b22b342826d5ea1f3638ffe7642e58e9fc2fa8f4e4ff99289";
       sha256 = {
-        x86_64-linux = "sha256-q1ez8v8w0ZTscHsl9TJLYfP+Zq6VXwtbarNP0HC7S4c=";
-        aarch64-linux = "sha256-cNH7zwR3+39WxI5pp9nFeJiO4wKMcGz0cjkl0bnGKgM=";
+        x86_64-linux = "sha256-0pPkbjbKS+u9IJ3Gj76OxhHZN4NtPa4rJgFrZhptgVA=";
+        aarch64-linux = "sha256-sto1YwQHJdVPAJMWfE8yyzsGy6JVFT4csr6zz3Ma12c=";
       };
     };
   in {
