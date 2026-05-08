@@ -5,8 +5,6 @@ permissions:
   packages: write
 
 on:
-  schedule:
-    - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
       force_rebuild:
