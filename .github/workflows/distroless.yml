@@ -39,17 +39,25 @@ jobs:
         id: prefetch
         run: |
           DIGEST="${{ steps.digest.outputs.digest }}"
-          PREFETCH_JSON=$(nix run nixpkgs#nix-prefetch-docker -- \
-            gcr.io/distroless/static-debian12 \
-            --image-digest "$DIGEST" \
-            --json)
-          SHA256=$(echo "$PREFETCH_JSON" | jq -r '.sha256')
+          # Capture both stdout and stderr; set +e to avoid script exit on failure
+          set +e
+          RAW=$(nix run nixpkgs#nix-prefetch-docker -- --json gcr.io/distroless/static-debian12 --image-digest "$DIGEST" 2>&1)
+          set -e
+          # Try to extract sha256 from JSON
+          SHA256=$(echo "$RAW" | jq -r '.sha256' 2>/dev/null)
           if [[ -z "$SHA256" || "$SHA256" == "null" ]]; then
-            echo "Error: Invalid sha256: $SHA256"
+            # Fallback: parse the human-readable output (e.g. "-> ImageHash: sha256-...")
+            SHA256=$(echo "$RAW" | grep -oP '(?<=-> ImageHash: )[a-zA-Z0-9\-=]+')
+          fi
+          if [[ -z "$SHA256" || "$SHA256" == "null" ]]; then
+            echo "Error: Could not extract sha256 from prefetch output"
+            echo "Raw output was:"
+            echo "$RAW"
             exit 1
           fi
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
-      
+          echo "Extracted sha256: $SHA256"
+    
       - name: Update flake.nix
         run: |
           # Use a single-quoted sed pattern to avoid variable interpolation by shell,
