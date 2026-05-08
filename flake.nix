@@ -10,7 +10,7 @@
     pkgs = nixpkgs.legacyPackages.${system};
 
     distrolessImage = {
-      imageName = "gcr.io/distroless/static-debian12";
+      imageName = "ghcr.io/podmania/base";
       imageDigest = "sha256:bf251a2cdaebb929ad7803671a3e5d48a0d9d4bcff43c2199d268e04ca8401bc";
       sha256 = {
         x86_64-linux = "sha256-q1ez8v8w0ZTscHsl9TJLYfP+Zq6VXwtbarNP0HC7S4c=";
