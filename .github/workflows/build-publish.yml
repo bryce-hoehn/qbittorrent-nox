@@ -33,7 +33,7 @@ jobs:
       - name: Get current qbittorrent-nox version from nixpkgs
         id: version
         run: |
-          VERSION=$(nix eval .#qbittorrent-noxVersion --raw)
+          VERSION=$(nix eval .#qbittorrent-noxVersion --raw --impure)
           echo "new_version=$VERSION" >> $GITHUB_OUTPUT
       - name: Check if version already exists or force rebuild requested
         id: check
@@ -75,7 +75,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
       - name: Build OCI image
-        run: nix build .#qbittorrent-nox-image
+        run: nix build .#qbittorrent-nox-image --impure
       - name: Load and tag
         run: |
           docker load < result
