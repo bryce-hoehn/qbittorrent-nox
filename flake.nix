@@ -29,10 +29,6 @@
         contents = [
           pkgs.qbittorrent-nox
         ];
-        fakeRootCommands = ''
-          mkdir -p ./config ./data
-          chown -R 1000:1000 /config /data
-        '';
         config = {
           ExposedPorts = {
             "8080/tcp" = {};
@@ -48,7 +44,6 @@
             "QBT_PROFILE=/config"
           ];
           Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
-          User = "1000";
           WorkingDir = "/config";
         };
       };
