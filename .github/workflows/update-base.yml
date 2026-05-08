@@ -2,8 +2,8 @@ name: Update Base Image
 
 on:
   schedule:
-    - cron: '0 9 * * 1'   # weekly on Monday
-  workflow_dispatch:       # manual trigger
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -11,8 +11,9 @@ jobs:
     env:
       IMAGE_NAME: ghcr.io/podmania/base
     permissions:
-      contents: write
+      contents: write 
       packages: write
+      actions: write 
 
     steps:
       - uses: actions/checkout@v6
@@ -75,6 +76,13 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
+          git add flake.nix
           git commit -m "chore: update base image"
           git push
+
+      - name: Trigger qBittorrent build workflow
+        if: success()
+        run: |
+          gh workflow run build-publish.yml --ref main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
