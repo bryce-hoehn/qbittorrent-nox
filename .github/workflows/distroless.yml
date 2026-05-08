@@ -1,5 +1,9 @@
 name: Update Distroless Base Image
 
+permissions:
+  contents: write
+  packages: write
+  
 on:
   schedule:
     - cron: '0 9 * * 1'   # weekly on Monday at 09:00 UTC
