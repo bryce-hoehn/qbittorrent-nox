@@ -17,7 +17,6 @@
         name = "qbittorrent-nox";
         tag = "latest";
         fromImage = base.packages.${system}.base-image;
-        copyToRoot = [ pkgs.qbittorrent-nox ];
         config = {
           ExposedPorts = {
             "8080/tcp" = {};
