@@ -42,3 +42,5 @@ These are read directly by the `qbittorrent-nox` binary. The naming convention i
 | `QBT_SEQUENTIAL` | _(unset)_ | Download files in sequential order |
 | `QBT_FIRST_AND_LAST` | _(unset)_ | Download first and last pieces first |
 | `QBT_SKIP_DIALOG` | `true` | Suppress "Add New Torrent" dialog (`true`/`false`) |
+
+<a href="https://www.buymeacoffee.com/bhoehn" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
