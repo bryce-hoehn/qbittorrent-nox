@@ -50,7 +50,6 @@
             "QBT_PROFILE=/config"
           ];
           Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
-          WorkingDir = "/config";
         };
       };
 
