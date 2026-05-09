@@ -1,0 +1,16 @@
+services:
+  qbittorrent-nox:
+    image: ghcr.io/podmania/qbittorrent-nox:latest
+    userns_mode: "keep-id"
+    container_name: qbittorrent-nox
+    ports:
+      - 8080:8080
+      - 6881:6881/tcp
+      - 6881:6881/udp
+    volumes:   
+      - ./config:/config
+      - ./data:/data
+      - /etc/localtime:/etc/localtime:ro # optional: use either TZ variable or localtime mapping, not both
+    # environment:
+    #   - TZ=America/New_York
+    restart: unless-stopped
