@@ -27,18 +27,21 @@ jobs:
         run: nix flake update
 
       - name: Commit and push if changed
+        id: commit
         run: |
           if git diff --quiet flake.lock; then
             echo "No changes to flake.lock"
+            echo "changed=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           git add flake.lock
           git commit -m "chore: update flake.lock"
           git push origin main
+          echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Trigger build-publish workflow
-        if: success()
+        if: steps.commit.outputs.changed == 'true'
         run: |
           gh workflow run build-publish.yml --ref main
         env:
