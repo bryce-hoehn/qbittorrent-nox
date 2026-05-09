@@ -11,29 +11,39 @@
     system = builtins.currentSystem;
     pkgs = nixpkgs.legacyPackages.${system};
     n2c = nix2container.outputs.packages.${system}.nix2container;
+    imageConfig = {
+      ExposedPorts = {
+        "8080/tcp" = {};
+        "6881/tcp" = {};
+        "6881/udp" = {};
+      };
+      Volumes = {
+        "/config" = {};
+        "/data" = {};
+      };
+      Env = [
+        "QBT_WEBUI_PORT=8080"
+        "QBT_PROFILE=/config"
+      ];
+      Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
+    };
   in {
     packages.${system} = {
       qbittorrent-nox-image = n2c.buildImage {
         name = "qbittorrent-nox";
         tag = "latest";
         fromImage = base.packages.${system}.base-image;
-        config = {
-          ExposedPorts = {
-            "8080/tcp" = {};
-            "6881/tcp" = {};
-            "6881/udp" = {};
-          };
-          Volumes = {
-            "/config" = {};
-            "/data" = {};
-          };
-          Env = [
-            "QBT_WEBUI_PORT=8080"
-            "QBT_PROFILE=/config"
-          ];
-          Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
-        };
+        config = imageConfig;
       };
+
+      qbittorrent-nox-debug-image = n2c.buildImage {
+        name = "qbittorrent-nox";
+        tag = "latest-debug";
+        fromImage = base.packages.${system}.base-debug-image;
+        config = imageConfig;
+      };
+
+      qbittorrent-nox = pkgs.qbittorrent-nox;
 
       default = self.packages.${system}.qbittorrent-nox-image;
     };
