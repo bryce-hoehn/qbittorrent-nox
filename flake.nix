@@ -11,6 +11,17 @@
     system = builtins.currentSystem;
     pkgs = nixpkgs.legacyPackages.${system};
     n2c = nix2container.outputs.packages.${system}.nix2container;
+    version = "5.1.4";
+    srcHash = "sha256-9RfKir/e+8Kvln20F+paXqtWzC3KVef2kNGyk1YpSv4=";
+    pkg = pkgs.qbittorrent-nox.overrideAttrs (old: {
+      inherit version;
+      src = pkgs.fetchFromGitHub {
+        owner = "qbittorrent";
+        repo = "qBittorrent";
+        rev = "release-${version}";
+        hash = srcHash;
+      };
+    });
     imageConfig = {
       ExposedPorts = {
         "8080/tcp" = {};
@@ -25,7 +36,7 @@
         "QBT_WEBUI_PORT=8080"
         "QBT_PROFILE=/config"
       ];
-      Cmd = [ "${pkgs.qbittorrent-nox}/bin/qbittorrent-nox" ];
+      Cmd = [ "${pkg}/bin/qbittorrent-nox" ];
     };
   in {
     packages.${system} = {
@@ -43,11 +54,11 @@
         config = imageConfig;
       };
 
-      qbittorrent-nox = pkgs.qbittorrent-nox;
+      qbittorrent-nox = pkg;
 
       default = self.packages.${system}.qbittorrent-nox-image;
     };
 
-    qbittorrent-noxVersion = pkgs.qbittorrent-nox.version;
+    qbittorrent-noxVersion = version;
   };
 }
