@@ -11,8 +11,8 @@
     system = builtins.currentSystem;
     pkgs = nixpkgs.legacyPackages.${system};
     n2c = nix2container.outputs.packages.${system}.nix2container;
-    version = "5.1.4";
-    srcHash = "sha256-9RfKir/e+8Kvln20F+paXqtWzC3KVef2kNGyk1YpSv4=";
+    version = "5.2.0";
+    srcHash = "sha256-Ha2Pc08gztI9fupQMykVz5wVIyUu9dRtChxjAGSxcOQ=";
     pkg = pkgs.qbittorrent-nox.overrideAttrs (old: {
       inherit version;
       src = pkgs.fetchFromGitHub {
