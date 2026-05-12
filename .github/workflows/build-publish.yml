@@ -17,7 +17,6 @@ jobs:
   build:
     uses: podmania/actions/.github/workflows/build-publish.yml@main
     with:
-      package: qbittorrent-nox
       version-output: qbittorrent-noxVersion
       images: '[{"name":"qbittorrent-nox","package":"qbittorrent-nox-image"}]'
       force_rebuild: ${{ github.event.inputs.force_rebuild == 'true' }}

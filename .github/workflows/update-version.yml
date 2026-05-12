@@ -8,6 +8,5 @@ jobs:
   update:
     uses: podmania/actions/.github/workflows/update-version.yml@main
     with:
-      package: qbittorrent-nox
       upstream: qbittorrent/qBittorrent
       tag-prefix: release-
