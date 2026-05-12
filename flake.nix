@@ -44,6 +44,7 @@
         name = "qbittorrent-nox";
         tag = "latest";
         fromImage = base.packages.${system}.base-image;
+        maxLayers = 5;
         config = imageConfig;
       };
 
@@ -51,6 +52,7 @@
         name = "qbittorrent-nox";
         tag = "latest-debug";
         fromImage = base.packages.${system}.base-debug-image;
+        maxLayers = 5;
         config = imageConfig;
       };
 
